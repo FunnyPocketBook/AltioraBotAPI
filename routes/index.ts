@@ -3,13 +3,9 @@ import * as fs from "fs";
 import * as express from "express";
 import bodyParser from "body-parser";
 import * as Interfaces from "../interface.js";
-import { time } from "node:console";
 
 const app = express.default();
 const port = 10013;
-
-app.use(bodyParser.urlencoded({ extended: false }));
-app.use(bodyParser.json());
 
 // start the Express server
 app.listen(port, () => {
@@ -40,23 +36,52 @@ const client = new Discord.Client(clientOptions);
 let config = loadConfig();
 client.login(config.botToken);
 
+app.use(bodyParser.urlencoded({ extended: false }));
+app.use(bodyParser.json());
+app.use(function (req, res, next) {
+  const body = req.body;
+  if (body.accessToken !== config.accessToken) {
+    console.log("Wrong token");
+    res.send({ status: "wrong access token" });
+    return;
+  }
+  next();
+});
+
 client.on("ready", () => {
   console.log("Beep boop bot be ready!");
 });
 
 app.post("/", (req, res) => {
   console.log("Req received");
+  sendMessage(config.communityEventChannel, req, res);
+});
+
+app.post("/test", (req, res) => {
+  console.log("Req test received");
+  sendMessage(config.botTestChannel, req, res);
+});
+
+function sendMessage(channel: string, req: any, res: any) {
   const body = req.body;
-  let message = `${body.username} has added **${body.minutes}** more minutes to their total time, which now adds up to **${body.total}**!\nServer total: **${body.serverTotal}**`;
   const guild: Discord.Guild | undefined = client.guilds.cache.get(
     config.altioraServer
   );
+  const usernameId = guild?.members.cache.find(
+    (u) => u.user.tag === body.username
+  )?.id;
+  const embed = new Discord.MessageEmbed()
+    .setColor(1778203)
+    .addField("New Time Added!", `<@!${usernameId}>`)
+    .addField(`**New Time**`, `${body.newTime}`)
+    .addField(`**Total Time**`, `${body.totalTime}`)
+    .addField(`**Server Total**`, `${body.serverTotal}`);
   const chan: Discord.GuildChannel | undefined = guild?.channels.cache.get(
-    config.botTestChannel
+    channel
   );
-  (chan as Discord.TextChannel).send(message);
+  (chan as Discord.TextChannel).send(embed);
   res.send({ status: "success" });
-});
+}
 
 function loadConfig(): Interfaces.Config {
   let config;

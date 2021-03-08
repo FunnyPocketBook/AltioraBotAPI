@@ -3,4 +3,5 @@ export interface Config {
   altioraServer: string;
   communityEventChannel: string;
   botTestChannel: string;
+  accessToken: string;
 }
