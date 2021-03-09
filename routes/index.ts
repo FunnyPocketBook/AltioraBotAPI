@@ -57,11 +57,13 @@ client.on("ready", () => {
 
 app.post("/walking-challenge", (req, res) => {
   console.log("Req received");
+  console.log(req.body);
   sendMessage(config.communityEventChannel, req, res);
 });
 
 app.post("/walking-challenge/test", (req, res) => {
   console.log("Req test received");
+  console.log(req.body);
   sendMessage(config.botTestChannel, req, res);
 });
 
@@ -73,9 +75,10 @@ function sendMessage(channel: string, req: any, res: any) {
   const usernameId = guild?.members.cache.find(
     (u) => u.user.tag === body.username
   )?.id;
+  const user = usernameId ? `<@!${usernameId}>` : body.username;
   const embed = new Discord.MessageEmbed()
     .setColor(1778203)
-    .addField("New Time Added!", `<@!${usernameId}>`)
+    .addField("New Time Added!", user)
     .addField(`**New Time**`, `${body.newTime}`)
     .addField(`**Total Time**`, `${body.totalTime}`)
     .addField(`**Server Total**`, `${body.serverTotal}`);
