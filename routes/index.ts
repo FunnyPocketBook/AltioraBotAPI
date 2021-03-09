@@ -86,10 +86,10 @@ function sendMessage(channel: string, req: any, res: any) {
 function loadConfig(): Interfaces.Config {
   let config;
   try {
-    const rawData = fs.readFileSync("config.json");
+    const rawData = fs.readFileSync("appdata/config.json");
     config = JSON.parse(rawData.toString());
   } catch (e) {
-    fs.writeFileSync("config.json", "{}");
+    fs.writeFileSync("appdata/config.json", "{}");
     config = {};
   }
   return config;
