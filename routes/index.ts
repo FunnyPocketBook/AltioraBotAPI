@@ -55,12 +55,12 @@ client.on("ready", () => {
   console.log("Beep boop bot be ready!");
 });
 
-app.post("/", (req, res) => {
+app.post("/walking-challenge", (req, res) => {
   console.log("Req received");
   sendMessage(config.communityEventChannel, req, res);
 });
 
-app.post("/test", (req, res) => {
+app.post("/walking-challenge/test", (req, res) => {
   console.log("Req test received");
   sendMessage(config.botTestChannel, req, res);
 });
