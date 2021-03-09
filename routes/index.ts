@@ -41,7 +41,10 @@ app.use(bodyParser.json());
 app.use(function (req, res, next) {
   const body = req.body;
   if (body.accessToken !== config.accessToken) {
-    console.log("Wrong token");
+    console.log(
+      `Wrong token, ${body.accessToken} provided, needed ${config.accessToken}`
+    );
+    console.log(body);
     res.send({ status: "wrong access token" });
     return;
   }
