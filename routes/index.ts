@@ -35,6 +35,7 @@ const clientOptions = {
 const client = new Discord.Client(clientOptions);
 let config = loadConfig();
 client.login(config.botToken);
+let guild: Discord.Guild | undefined;
 
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
@@ -53,25 +54,53 @@ app.use(function (req, res, next) {
 
 client.on("ready", () => {
   console.log("Beep boop bot be ready!");
+  guild = client.guilds.cache.get(config.altioraServer);
 });
 
 app.post("/walking-challenge", (req, res) => {
-  console.log("Req received");
+  console.log("Req /walking-challenge received");
   console.log(req.body);
   sendMessage(config.communityEventChannel, req, res);
 });
 
 app.post("/walking-challenge/test", (req, res) => {
-  console.log("Req test received");
+  console.log("Req /walking-challenge/test received");
   console.log(req.body);
   sendMessage(config.botTestChannel, req, res);
 });
 
+app.post("/test", async (req, res) => {
+  console.log("Req /test received");
+  console.log(req.body);
+  try {
+    const chan: Discord.GuildChannel | undefined = guild?.channels.cache.get(
+      config.botTestChannel
+    );
+    await (chan as Discord.TextChannel).send(req.body.message);
+    res.send({ status: "success" });
+  } catch (e) {
+    console.error(e);
+    res.send({ status: "error" });
+  }
+});
+
+app.post("/sendMessage", async (req, res) => {
+  console.log("Req /sendMessage received");
+  console.log(req.body);
+  try {
+    const chan: Discord.GuildChannel | undefined = guild?.channels.cache.get(
+      req.body.channelId
+    );
+    await (chan as Discord.TextChannel).send(req.body.message);
+    res.send({ status: "success" });
+  } catch (e) {
+    console.error(`Couldn't send message ${req.body.message}:\n${e}`);
+    res.send({ status: "error" });
+  }
+});
+
 function sendMessage(channel: string, req: any, res: any) {
   const body = req.body;
-  const guild: Discord.Guild | undefined = client.guilds.cache.get(
-    config.altioraServer
-  );
   const usernameId = guild?.members.cache.find(
     (u) => u.user.tag === body.username
   )?.id;
@@ -82,11 +111,16 @@ function sendMessage(channel: string, req: any, res: any) {
     .addField(`**New Time**`, `${body.newTime}`)
     .addField(`**Total Time**`, `${body.totalTime}`)
     .addField(`**Server Total**`, `${body.serverTotal}`);
-  const chan: Discord.GuildChannel | undefined = guild?.channels.cache.get(
-    channel
-  );
-  (chan as Discord.TextChannel).send(embed);
-  res.send({ status: "success" });
+
+  try {
+    const chan: Discord.GuildChannel | undefined = guild?.channels.cache.get(
+      channel
+    );
+    (chan as Discord.TextChannel).send(embed);
+    res.send({ status: "success" });
+  } catch (e) {
+    res.send({ status: "error" });
+  }
 }
 
 function loadConfig(): Interfaces.Config {
